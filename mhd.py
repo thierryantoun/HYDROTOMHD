@@ -4,8 +4,8 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 3
-ny = 3
+nx = 100
+ny = 100
 
 nt = 200
 cfl = 0.8
@@ -44,20 +44,35 @@ P = 5./(12*np.pi)
 for i in range(nx+2):
     for j in range(ny+2):
 
-        Uold[i,j,ID] = 25./(36*np.pi)
-        Uold[i,j,IU] = 0.
-        Uold[i,j,IV] = 0.
-        Uold[i,j,IBx] = 0.
-        Uold[i,j,IBy] = 0.
-        Uold[i,j,IE] = P/(gamma-1.)
+        if((xc[i]-0.5*Lx)**2+(yc[j]-0.5*Ly)**2<0.2**2):
+            Uold[i,j,ID] = 25./(36*np.pi)
+            Uold[i,j,IU] = 0.
+            Uold[i,j,IV] = 0.
+            Uold[i,j,IBx] = 0.
+            Uold[i,j,IBy] = 0.
+            Uold[i,j,IE] = P/(gamma-1.)
 
-        Unew[i,j,ID] = 25./(36*np.pi)
-        Unew[i,j,IU] = 0.
-        Unew[i,j,IV] = 0.
+            Unew[i,j,ID] = 25./(36*np.pi)
+            Unew[i,j,IU] = 0.
+            Unew[i,j,IV] = 0.
 
-        Unew[i,j,IBx] = 0.
-        Unew[i,j,IBy] = 0.
-        Unew[i,j,IE] = P/(gamma-1.)
+            Unew[i,j,IBx] = 0.
+            Unew[i,j,IBy] = 0.
+            Unew[i,j,IE] = P/(gamma-1.)
+        else:
+            Uold[i,j,ID] = 5./(36*np.pi)
+            Uold[i,j,IU] = 0.
+            Uold[i,j,IV] = 0.
+            Uold[i,j,IBx] = 0.
+            Uold[i,j,IBy] = 0.
+            Uold[i,j,IE] = 0.1*P/(gamma-1.)
+
+            Unew[i,j,ID] = 5./(36*np.pi)
+            Unew[i,j,IU] = 0.
+            Unew[i,j,IV] = 0.
+            Unew[i,j,IBx] = 0.
+            Unew[i,j,IBy] = 0.
+            Unew[i,j,IE] = 0.1*P/(gamma-1.)
 
 int_rho = sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0)
 int_E   = sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0)
@@ -296,7 +311,6 @@ def compute_kernel(Uold,Unew,dt):
 
             for ivar in range(nvar):
                 Unew[i,j,ivar] -= (dt/dy)*flux[ivar]
-
 
 #time loop
 iout = 0
