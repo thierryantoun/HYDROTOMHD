@@ -4,8 +4,8 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 10
-ny = 10
+nx = 3
+ny = 3
 
 nt = 200
 cfl = 0.8
@@ -45,24 +45,19 @@ for i in range(nx+2):
     for j in range(ny+2):
 
         Uold[i,j,ID] = 25./(36*np.pi)
-        Uold[i,j,IU] = -np.sin(2*np.pi*j)*Uold[i,j,ID]
-        Uold[i,j,IV] = np.sin(2*np.pi*i)*Uold[i,j,ID]
-        rho_old = Uold[i,j,ID]
-        u_old = Uold[i,j,IU]/rho_old
-        v_old = Uold[i,j,IV]/rho_old
-        Uold[i,j,IBx] = -1/sqrt(4*np.pi) * np.sin(2*np.pi*j)
-        Uold[i,j,IBy] = 1/sqrt(4*np.pi) * np.sin(4*np.pi*i)
-        Uold[i,j,IE] = P/(gamma-1.) + 0.5*(Uold[i,j,IBx]**2 + Uold[i,j,IBy]**2) + 0.5*(u_old**2+v_old**2)*rho_old
+        Uold[i,j,IU] = 0.
+        Uold[i,j,IV] = 0.
+        Uold[i,j,IBx] = 0.
+        Uold[i,j,IBy] = 0.
+        Uold[i,j,IE] = P/(gamma-1.)
 
         Unew[i,j,ID] = 25./(36*np.pi)
-        Unew[i,j,IU] = -np.sin(2*np.pi*j)*Uold[i,j,ID]
-        Unew[i,j,IV] = np.sin(2*np.pi*i)*Uold[i,j,ID]
-        rho_new = Unew[i,j,ID]
-        u_new = Unew[i,j,IU]/rho_new
-        v_new = Unew[i,j,IV]/rho_new
-        Unew[i,j,IBx] = -1/sqrt(4*np.pi) * np.sin(2*np.pi*j)
-        Unew[i,j,IBy] = 1/sqrt(4*np.pi) * np.sin(4*np.pi*i)
-        Unew[i,j,IE] = P/(gamma-1.) + 0.5*(Unew[i,j,IBx]**2 + Unew[i,j,IBy]**2) + 0.5*(u_new**2+v_new**2)*rho_new
+        Unew[i,j,IU] = 0.
+        Unew[i,j,IV] = 0.
+
+        Unew[i,j,IBx] = 0.
+        Unew[i,j,IBy] = 0.
+        Unew[i,j,IE] = P/(gamma-1.)
 
 int_rho = sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0)
 int_E   = sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0)
@@ -144,7 +139,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IBy] = ustar * Uold[i,j,IBy] - vstar * Uold[i-1,j,IBx]
 
             for ivar in range(nvar):
-               Unew[i,j,ivar] += dt/dx*flux[ivar]
+               Unew[i,j,ivar] += (dt/dx)*flux[ivar]
 
             #x direction right flux
             rhol = Uold[i,j,ID]
@@ -196,7 +191,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IBy] = ustar * Uold[i+1,j,IBy] - vstar * Uold[i,j,IBy]
 
             for ivar in range(nvar):
-                Unew[i,j,ivar] -= dt/dx*flux[ivar]
+                Unew[i,j,ivar] -= (dt/dx)*flux[ivar]
 
             #y direction left flux
             rhol = Uold[i,j-1,ID]
@@ -208,7 +203,7 @@ def compute_kernel(Uold,Unew,dt):
             eBl = 0.5*(Bxl**2 + Byl**2)
             pl = -Bxl*Byl
             ql = (Uold[i,j-1,IE]-ekinl-eBl)*(gamma-1.) + eBl - Byl*Byl
-            al = rhol*sqrt(gamma*pl/rhol)
+            al = rhol*sqrt(gamma*ql/rhol)
 
             rhor = Uold[i,j,ID]
             ur = Uold[i,j,IU]/rhor
@@ -219,7 +214,7 @@ def compute_kernel(Uold,Unew,dt):
             eBl = 0.5*(Bxr**2 + Byr**2)
             pr = -Byr*Bxr
             qr = (Uold[i,j,IE]-ekinr)*(gamma-1.) + eBr - Byr*Byr
-            ar = rhor*sqrt(gamma*pr/rhor)
+            ar = rhor*sqrt(gamma*qr/rhor)
 
             aface = 1.1*max(al,ar)
 
@@ -248,7 +243,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IBy] = vstar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * vstar
 
             for ivar in range(nvar):
-                Unew[i,j,ivar] += dt/dy*flux[ivar]
+                Unew[i,j,ivar] += (dt/dy)*flux[ivar]
 
             #y direction right flux
             rhol = Uold[i,j,ID]
@@ -260,7 +255,7 @@ def compute_kernel(Uold,Unew,dt):
             eBl = 0.5*(Bxl**2 + Byl**2)
             pl = -Bxl*Byl
             ql = (Uold[i,j,IE]-ekinl-eBl)*(gamma-1.) + eBl - Byl*Byl
-            al = rhol*sqrt(gamma*pl/rhol)
+            al = rhol*sqrt(gamma*ql/rhol)
 
             rhor = Uold[i,j+1,ID]
             ur = Uold[i,j+1,IU]/rhor
@@ -271,7 +266,7 @@ def compute_kernel(Uold,Unew,dt):
             eBl = 0.5*(Bxr**2 + Byr**2)
             pr = -Byr*Bxr
             qr = (Uold[i,j+1,IE]-ekinr)*(gamma-1.) + eBr - Byr*Byr
-            ar = rhor*sqrt(gamma*pr/rhor)
+            ar = rhor*sqrt(gamma*qr/rhor)
 
             aface = 1.1*max(al,ar)
 
@@ -300,7 +295,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IBy] = vstar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * vstar
 
             for ivar in range(nvar):
-                Unew[i,j,ivar] -= dt/dy*flux[ivar]
+                Unew[i,j,ivar] -= (dt/dy)*flux[ivar]
 
 
 #time loop
