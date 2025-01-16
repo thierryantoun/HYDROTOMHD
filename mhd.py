@@ -4,8 +4,8 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 100
-ny = 100
+nx = 3
+ny = 3
 
 nt = 200
 cfl = 0.8
@@ -326,8 +326,8 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * ustar
             else:
                 flux[ID] = ustar*Uold[i,j+1,ID]
-                flux[IU] = vstar*Uold[i,j+1,IV] + pstar
-                flux[IV] = ustar*Uold[i,j+1,IV] + qstar
+                flux[IU] = vstar*Uold[i,j+1,IV] + qstar
+                flux[IV] = ustar*Uold[i,j+1,IV] + pstar
                 flux[IE] = ustar*Uold[i,j+1,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * vstar
                 flux[IBy] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * ustar
