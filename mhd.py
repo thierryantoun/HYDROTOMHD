@@ -39,40 +39,59 @@ IE = 3
 IBx = 4
 IBy = 5
 
-P = 5./(12*np.pi) 
+# P = 5./(12*np.pi) 
+
+# for i in range(nx+2):
+#     for j in range(ny+2):
+
+#         Uold[i,j,ID] = 25./(36*np.pi)
+#         Uold[i,j,IU] = 0.
+#         Uold[i,j,IV] = 0.
+#         Uold[i,j,IBx] = 0.
+#         Uold[i,j,IBy] = 0.
+#         Uold[i,j,IE] = P/(gamma-1.)
+
+#         Unew[i,j,ID] = 25./(36*np.pi)
+#         Unew[i,j,IU] = 0.
+#         Unew[i,j,IV] = 0.
+#         Unew[i,j,IBx] = 0.
+#         Unew[i,j,IBy] = 0.
+#         Unew[i,j,IE] = P/(gamma-1.)
 
 for i in range(nx+2):
     for j in range(ny+2):
 
         if((xc[i]-0.5*Lx)**2+(yc[j]-0.5*Ly)**2<0.2**2):
-            Uold[i,j,ID] = 25./(36*np.pi)
+
+            Uold[i,j,ID] = 1.
             Uold[i,j,IU] = 0.
             Uold[i,j,IV] = 0.
             Uold[i,j,IBx] = 0.
             Uold[i,j,IBy] = 0.
-            Uold[i,j,IE] = P/(gamma-1.)
+            Uold[i,j,IE] = 10./(gamma-1.)
 
-            Unew[i,j,ID] = 25./(36*np.pi)
+            Unew[i,j,ID] = 1.
             Unew[i,j,IU] = 0.
             Unew[i,j,IV] = 0.
-
             Unew[i,j,IBx] = 0.
             Unew[i,j,IBy] = 0.
-            Unew[i,j,IE] = P/(gamma-1.)
+            Unew[i,j,IE] = 10./(gamma-1.)
+
         else:
-            Uold[i,j,ID] = 5./(36*np.pi)
+
+            Uold[i,j,ID] = 1.2
             Uold[i,j,IU] = 0.
             Uold[i,j,IV] = 0.
             Uold[i,j,IBx] = 0.
             Uold[i,j,IBy] = 0.
-            Uold[i,j,IE] = 0.1*P/(gamma-1.)
+            Uold[i,j,IE] = 0.1/(gamma-1.)
 
-            Unew[i,j,ID] = 5./(36*np.pi)
+            Unew[i,j,ID] = 1.2
             Unew[i,j,IU] = 0.
             Unew[i,j,IV] = 0.
             Unew[i,j,IBx] = 0.
             Unew[i,j,IBy] = 0.
-            Unew[i,j,IE] = 0.1*P/(gamma-1.)
+            Unew[i,j,IE] = 0.1/(gamma-1.)
 
 int_rho = sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0)
 int_E   = sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0)
@@ -233,29 +252,31 @@ def compute_kernel(Uold,Unew,dt):
 
             aface = 1.1*max(al,ar)
 
-            ustar = 0.5*(vl+vr)-0.5*(pr-pl)/aface
+            #normale
+            ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
             theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
-            pstar = 0.5*(pl+pr)-0.5*(vr-vl)*aface*theta
+            pstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface*theta
 
-            vstar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
-            qstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface
+            #tangentielle
+            vstar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
+            qstar = 0.5*(pl+pr)-0.5*(ur-ul)*aface
 
             flux = np.zeros(nvar)
 
             if (vstar>0):
-                flux[ID] = vstar*Uold[i,j-1,ID]
-                flux[IU] = ustar*Uold[i,j-1,IV] + pstar
-                flux[IV] = vstar*Uold[i,j-1,IV] + qstar
-                flux[IE] = vstar*Uold[i,j-1,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = vstar * Uold[i,j-1,IBx] - Uold[i,j,IBy] * ustar
-                flux[IBy] = vstar * Uold[i,j-1,IBy] - Uold[i,j,IBy] * vstar
+                flux[ID] = ustar*Uold[i,j-1,ID]
+                flux[IU] = vstar*Uold[i,j-1,IV] + qstar
+                flux[IV] = ustar*Uold[i,j-1,IV] + pstar
+                flux[IE] = ustar*Uold[i,j-1,IE] + pstar*ustar + qstar*vstar
+                flux[IBx] = ustar * Uold[i,j-1,IBx] - Uold[i,j,IBy] * vstar
+                flux[IBy] = ustar * Uold[i,j-1,IBy] - Uold[i,j,IBy] * ustar
             else:
-                flux[ID] = vstar*Uold[i,j,ID]
-                flux[IU] = ustar*Uold[i,j,IV] + pstar
-                flux[IV] = vstar*Uold[i,j,IV] + qstar
+                flux[ID] = ustar*Uold[i,j,ID]
+                flux[IU] = vstar*Uold[i,j,IV] + qstar
+                flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = vstar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * ustar
-                flux[IBy] = vstar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * vstar
+                flux[IBx] = ustar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * vstar
+                flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * ustar
 
             for ivar in range(nvar):
                 Unew[i,j,ivar] += (dt/dy)*flux[ivar]
@@ -285,29 +306,31 @@ def compute_kernel(Uold,Unew,dt):
 
             aface = 1.1*max(al,ar)
 
-            ustar = 0.5*(vl+vr)-0.5*(pr-pl)/aface
+            #normale
+            ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
             theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
-            pstar = 0.5*(pl+pr)-0.5*(vr-vl)*aface*theta
+            pstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface*theta
 
-            vstar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
-            qstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface
+            #tangentielle
+            vstar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
+            qstar = 0.5*(pl+pr)-0.5*(ur-ul)*aface
 
             flux = np.zeros(nvar)
 
             if (vstar>0):
-                flux[ID] = vstar*Uold[i,j,ID]
-                flux[IU] = ustar*Uold[i,j,IV] + pstar
-                flux[IV] = vstar*Uold[i,j,IV] + qstar
+                flux[ID] = ustar*Uold[i,j,ID]
+                flux[IU] = vstar*Uold[i,j,IV] + qstar
+                flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = vstar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * ustar
-                flux[IBy] = vstar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * vstar
+                flux[IBx] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * vstar
+                flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * ustar
             else:
-                flux[ID] = vstar*Uold[i,j+1,ID]
-                flux[IU] = ustar*Uold[i,j+1,IV] + pstar
-                flux[IV] = vstar*Uold[i,j+1,IV] + qstar
+                flux[ID] = ustar*Uold[i,j+1,ID]
+                flux[IU] = vstar*Uold[i,j+1,IV] + pstar
+                flux[IV] = ustar*Uold[i,j+1,IV] + qstar
                 flux[IE] = ustar*Uold[i,j+1,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = vstar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * ustar
-                flux[IBy] = vstar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * vstar
+                flux[IBx] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * vstar
+                flux[IBy] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * ustar
 
             for ivar in range(nvar):
                 Unew[i,j,ivar] -= (dt/dy)*flux[ivar]
