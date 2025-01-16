@@ -4,8 +4,8 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 3
-ny = 3
+nx = 100
+ny = 100
 
 nt = 200
 cfl = 0.8
@@ -180,10 +180,10 @@ def compute_kernel(Uold,Unew,dt):
             ul = Uold[i,j,IU]/rhol
             vl = Uold[i,j,IV]/rhol
             ekinl = 0.5*(ul**2+vl**2)*rhol
-            Bxl = Uold[i-1,j,IBx]
-            Byl = Uold[i-1,j,IBy]
+            Bxl = Uold[i,j,IBx]
+            Byl = Uold[i,j,IBy]
             eBl = 0.5*(Bxl**2 + Byl**2)
-            pl = (Uold[i-1,j,IE]-ekinl-eBl)*(gamma-1.) + eBl - Bxl*Bxl
+            pl = (Uold[i,j,IE]-ekinl-eBl)*(gamma-1.) + eBl - Bxl*Bxl
             ql = -Bxl*Byl
             al = rhol*sqrt(gamma*pl/rhol)
 
