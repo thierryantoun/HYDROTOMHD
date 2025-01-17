@@ -160,14 +160,14 @@ def compute_kernel(Uold,Unew,dt):
             if (ustar>0):
                 flux[ID] = ustar*Uold[i-1,j,ID]
                 flux[IU] = ustar*Uold[i-1,j,IU] + pstar
-                flux[IV] = vstar*Uold[i-1,j,IU] + qstar
+                flux[IV] = ustar*Uold[i-1,j,IV] + qstar
                 flux[IE] = ustar*Uold[i-1,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i-1,j,IBx] - ustar * Uold[i,j,IBx]
                 flux[IBy] = ustar * Uold[i-1,j,IBy] - vstar * Uold[i,j,IBx]
             else:
                 flux[ID] = ustar*Uold[i,j,ID]
                 flux[IU] = ustar*Uold[i,j,IU] + pstar
-                flux[IV] = vstar*Uold[i,j,IU] + qstar
+                flux[IV] = ustar*Uold[i,j,IV] + qstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j,IBx] - ustar * Uold[i-1,j,IBx]
                 flux[IBy] = ustar * Uold[i,j,IBy] - vstar * Uold[i-1,j,IBx]
@@ -212,14 +212,14 @@ def compute_kernel(Uold,Unew,dt):
             if (ustar>0):
                 flux[ID] = ustar*Uold[i,j,ID]
                 flux[IU] = ustar*Uold[i,j,IU] + pstar
-                flux[IV] = vstar*Uold[i,j,IU] + qstar
+                flux[IV] = ustar*Uold[i,j,IV] + qstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j,IBx] - ustar * Uold[i+1,j,IBx]
                 flux[IBy] = ustar * Uold[i,j,IBy] - vstar * Uold[i+1,j,IBx]
             else:
                 flux[ID] = ustar*Uold[i+1,j,ID]
                 flux[IU] = ustar*Uold[i+1,j,IU] + pstar
-                flux[IV] = vstar*Uold[i+1,j,IU] + qstar
+                flux[IV] = ustar*Uold[i+1,j,IV] + qstar
                 flux[IE] = ustar*Uold[i+1,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i+1,j,IBx] - ustar * Uold[i,j,IBx]
                 flux[IBy] = ustar * Uold[i+1,j,IBy] - vstar * Uold[i,j,IBy]
@@ -263,16 +263,16 @@ def compute_kernel(Uold,Unew,dt):
 
             flux = np.zeros(nvar)
 
-            if (vstar>0):
+            if (ustar>0):
                 flux[ID] = ustar*Uold[i,j-1,ID]
-                flux[IU] = vstar*Uold[i,j-1,IV] + qstar
+                flux[IU] = ustar*Uold[i,j-1,IU] + qstar
                 flux[IV] = ustar*Uold[i,j-1,IV] + pstar
                 flux[IE] = ustar*Uold[i,j-1,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j-1,IBx] - Uold[i,j,IBy] * vstar
                 flux[IBy] = ustar * Uold[i,j-1,IBy] - Uold[i,j,IBy] * ustar
             else:
                 flux[ID] = ustar*Uold[i,j,ID]
-                flux[IU] = vstar*Uold[i,j,IV] + qstar
+                flux[IU] = ustar*Uold[i,j,IU] + qstar
                 flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * vstar
@@ -317,16 +317,16 @@ def compute_kernel(Uold,Unew,dt):
 
             flux = np.zeros(nvar)
 
-            if (vstar>0):
+            if (ustar>0):
                 flux[ID] = ustar*Uold[i,j,ID]
-                flux[IU] = vstar*Uold[i,j,IV] + qstar
+                flux[IU] = ustar*Uold[i,j,IU] + qstar
                 flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * vstar
                 flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * ustar
             else:
                 flux[ID] = ustar*Uold[i,j+1,ID]
-                flux[IU] = vstar*Uold[i,j+1,IV] + qstar
+                flux[IU] = ustar*Uold[i,j+1,IU] + qstar
                 flux[IV] = ustar*Uold[i,j+1,IV] + pstar
                 flux[IE] = ustar*Uold[i,j+1,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * vstar
