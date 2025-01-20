@@ -14,7 +14,7 @@ freq_output = 10
 Lx = 1.
 Ly = 1.
 
-gamma = 5./3.
+gamma = 2.
 cv = 1.5
 
 #grid
@@ -41,62 +41,31 @@ IBy = 5
 
 x_interface = 0.5  
 
-# for i in range(nx+2):
-#     for j in range(ny+2):
-#         x = xc[i]
-#         if x < x_interface:  
-#             P = 1.0
-#             Uold[i,j,ID] = 1.0  
-#             Uold[i,j,IU] = 0.0 
-#             Uold[i,j,IV] = 0.0 
-#             Uold[i,j,IBx] = 0.65
-#             Uold[i,j,IBy] = 1.  
-#             ekinl = 0
-#             emagl = 0.5*(Uold[i,j,IBx]**2 + Uold[i,j,IBy]**2)
-#             Uold[i,j,IE] = P/(gamma-1) + ekinl + emagl
-#             Unew[i,j,:] = Uold[i,j,:]
-#         else:  
-#             P = 0.1
-#             Uold[i,j,ID] = 0.125  
-#             Uold[i,j,IU] = 0.0  
-#             Uold[i,j,IV] = 0.0  
-#             Uold[i,j,IBx] = 0.65 
-#             Uold[i,j,IBy] = -1.
-#             ekinr = 0
-#             emagr = 0.5*(Uold[i,j,IBx]**2 + Uold[i,j,IBy]**2)
-#             Uold[i,j,IE] = P/(gamma-1) + ekinr + emagr
-#             Unew[i,j,:] = Uold[i,j,:]
-
 for i in range(nx+2):
     for j in range(ny+2):
-        if((xc[i]-0.5*Lx)**2+(yc[j]-0.5*Ly)**2<0.2**2):
-            Uold[i,j,ID] = 1.
-            Uold[i,j,IU] = 0.
-            Uold[i,j,IV] = 0.
-            Uold[i,j,IBx] = 0.
-            Uold[i,j,IBy] = 0.
-            Uold[i,j,IE] = 10./(gamma-1.)
-            
-            Unew[i,j,ID] = 1.
-            Unew[i,j,IU] = 0.
-            Unew[i,j,IV] = 0.
-            Unew[i,j,IBx] = 0.
-            Unew[i,j,IBy] = 0.
-            Unew[i,j,IE] = 10./(gamma-1.)
-        else:
-            Uold[i,j,ID] = 1.2
-            Uold[i,j,IU] = 0.
-            Uold[i,j,IV] = 0.
-            Uold[i,j,IBx] = 0.
-            Uold[i,j,IBy] = 0.
-            Uold[i,j,IE] = 0.1/(gamma-1.)
-            
-            Unew[i,j,ID] = 1.2
-            Unew[i,j,IU] = 0.
-            Unew[i,j,IV] = 0.
-            Unew[i,j,IBx] = 0.
-            Unew[i,j,IBy] = 0.
-            Unew[i,j,IE] = 0.1/(gamma-1.)
+        x = xc[i]
+        if x < x_interface:  
+            P = 1.0
+            Uold[i,j,ID] = 1.0  
+            Uold[i,j,IU] = 0.0 
+            Uold[i,j,IV] = 0.0 
+            Uold[i,j,IBx] = 0.65
+            Uold[i,j,IBy] = 1.  
+            ekinl = 0
+            emagl = 0.5*(Uold[i,j,IBx]**2 + Uold[i,j,IBy]**2)
+            Uold[i,j,IE] = P/(gamma-1) + ekinl + emagl
+            Unew[i,j,:] = Uold[i,j,:]
+        else:  
+            P = 0.1
+            Uold[i,j,ID] = 0.125  
+            Uold[i,j,IU] = 0.0  
+            Uold[i,j,IV] = 0.0  
+            Uold[i,j,IBx] = 0.65
+            Uold[i,j,IBy] = -1.
+            ekinr = 0
+            emagr = 0.5*(Uold[i,j,IBx]**2 + Uold[i,j,IBy]**2)
+            Uold[i,j,IE] = P/(gamma-1) + ekinr + emagr
+            Unew[i,j,:] = Uold[i,j,:]
 
 int_rho = sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0)
 int_E   = sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0)
@@ -168,7 +137,7 @@ def compute_kernel(Uold,Unew,dt):
             aface = 1.1*max(al,ar)
 
             ustar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
-            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
+            theta = 1.
             pstar = 0.5*(pl+pr)-0.5*(ur-ul)*aface*theta
 
             vstar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -193,7 +162,6 @@ def compute_kernel(Uold,Unew,dt):
 
             for ivar in range(nvar):
                 Unew[i,j,ivar] += (dt/dx)*flux[ivar]
-
 
             #x direction right flux
             rhol = Uold[i,j,ID]
@@ -231,7 +199,7 @@ def compute_kernel(Uold,Unew,dt):
             aface = 1.1*max(al,ar)
 
             ustar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
-            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
+            theta = 1.
             pstar = 0.5*(pl+pr)-0.5*(ur-ul)*aface*theta
 
             vstar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -294,7 +262,7 @@ def compute_kernel(Uold,Unew,dt):
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
-            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
+            theta = 1.
             pstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface*theta
 
             #tangentielle
@@ -315,11 +283,11 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IU] = ustar*Uold[i,j,IU] + qstar
                 flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * vstar
+                flux[IBx] = ustar * Uold[i,j,IBx] - Uold[i,j-1,IBy] * vstar
                 flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * ustar
 
             for ivar in range(nvar):
-                Unew[i,j,ivar] += (dt/dy)*flux[ivar]
+               Unew[i,j,ivar] += (dt/dy)*flux[ivar]
 
             #y direction right flux
             rhol = Uold[i,j,ID]
@@ -358,7 +326,7 @@ def compute_kernel(Uold,Unew,dt):
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
-            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
+            theta = 1.
             pstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface*theta
 
             #tangentielle
@@ -372,7 +340,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IU] = ustar*Uold[i,j,IU] + qstar
                 flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * vstar
+                flux[IBx] = ustar * Uold[i,j,IBx] - Uold[i,j+1,IBy] * vstar
                 flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * ustar
             else:
                 flux[ID] = ustar*Uold[i,j+1,ID]
@@ -388,18 +356,20 @@ def compute_kernel(Uold,Unew,dt):
 #time loop
 iout = 0
 time = 0.
-tend = 1.5
+tend = 0.1
+it = 0.
 
-for it in range(nt):
-    print("timestep: ",time)
+while time < tend:
+    it+=1
+    # print("timestep: ",it)
     #output
     if (it%freq_output ==0):
         #vizualization result
         figure(1)
         clf()
-        imshow(Unew[:,:,ID],origin='lower')
+        imshow(Unew[:,:,IBx],origin='lower')
         colorbar()
-        savefig('output_brio_wu_1'+str(iout).zfill(3)+'.png')
+        savefig('output_blast'+str(iout).zfill(3)+'.png')
         iout +=1
 
     #compute time step
@@ -425,7 +395,7 @@ for it in range(nt):
 #final output
 figure(1)
 clf()
-imshow(Unew[:,:,ID],origin='lower')
+imshow(Unew[:,:,IBx],origin='lower')
 colorbar()
 savefig('output_'+str(iout).zfill(3)+'.png')
 print("time: ",time," rho, E conservation: ",abs(int_rho-sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0))/int_rho, abs(int_E-sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0))/int_E)
