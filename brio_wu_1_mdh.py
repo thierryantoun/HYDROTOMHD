@@ -91,6 +91,7 @@ def compute_timestep(Uold):
 
             dt_loc = cfl*dx/max(abs(uc)+cmf,abs(vc)+cmf)
             dt = min(dt,dt_loc)
+    print("dt:",dt)
 
     return dt
 
@@ -276,15 +277,15 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IU] = ustar*Uold[i,j-1,IU] + qstar
                 flux[IV] = ustar*Uold[i,j-1,IV] + pstar
                 flux[IE] = ustar*Uold[i,j-1,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j-1,IBx] - Uold[i,j,IBy] * vstar
-                flux[IBy] = ustar * Uold[i,j-1,IBy] - Uold[i,j,IBy] * ustar
+                flux[IBx] = ustar * Uold[i,j-1,IBx] - vstar * Uold[i,j,IBy] 
+                flux[IBy] = ustar * Uold[i,j-1,IBy] - ustar * Uold[i,j,IBy]
             else:
                 flux[ID] = ustar*Uold[i,j,ID]
                 flux[IU] = ustar*Uold[i,j,IU] + qstar
                 flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j,IBx] - Uold[i,j-1,IBy] * vstar
-                flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j-1,IBy] * ustar
+                flux[IBx] = ustar * Uold[i,j,IBx] - vstar * Uold[i,j-1,IBy]
+                flux[IBy] = ustar * Uold[i,j,IBy] - ustar * Uold[i,j-1,IBy]
 
             for ivar in range(nvar):
                Unew[i,j,ivar] += (dt/dy)*flux[ivar]
@@ -340,15 +341,15 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IU] = ustar*Uold[i,j,IU] + qstar
                 flux[IV] = ustar*Uold[i,j,IV] + pstar
                 flux[IE] = ustar*Uold[i,j,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j,IBx] - Uold[i,j+1,IBy] * vstar
-                flux[IBy] = ustar * Uold[i,j,IBy] - Uold[i,j+1,IBy] * ustar
+                flux[IBx] = ustar * Uold[i,j,IBx] - vstar * Uold[i,j+1,IBy] 
+                flux[IBy] = ustar * Uold[i,j,IBy] - ustar * Uold[i,j+1,IBy]
             else:
                 flux[ID] = ustar*Uold[i,j+1,ID]
                 flux[IU] = ustar*Uold[i,j+1,IU] + qstar
                 flux[IV] = ustar*Uold[i,j+1,IV] + pstar
                 flux[IE] = ustar*Uold[i,j+1,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * vstar
-                flux[IBy] = ustar * Uold[i,j+1,IBy] - Uold[i,j,IBy] * ustar
+                flux[IBx] = ustar * Uold[i,j+1,IBy] - vstar * Uold[i,j,IBy]
+                flux[IBy] = ustar * Uold[i,j+1,IBy] - ustar * Uold[i,j,IBy]
 
             for ivar in range(nvar):
                 Unew[i,j,ivar] -= (dt/dy)*flux[ivar]
@@ -361,7 +362,7 @@ it = 0.
 
 while time < tend:
     it+=1
-    # print("timestep: ",it)
+    print("timestep: ",it)
     #output
     if (it%freq_output ==0):
         #vizualization result
@@ -395,7 +396,7 @@ while time < tend:
 #final output
 figure(1)
 clf()
-imshow(Unew[:,:,IBx],origin='lower')
+imshow(Unew[:,:,ID],origin='lower')
 colorbar()
 savefig('output_'+str(iout).zfill(3)+'.png')
 print("time: ",time," rho, E conservation: ",abs(int_rho-sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0))/int_rho, abs(int_E-sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0))/int_E)
