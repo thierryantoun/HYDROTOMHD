@@ -8,7 +8,7 @@ nx = 100
 ny = 100
 
 nt = 200
-cfl = 0.4
+cfl = 0.3
 freq_output = 10
 
 Lx = 1.
@@ -221,7 +221,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IV] = ustar*Uold[i+1,j,IV] + qstar
                 flux[IE] = ustar*Uold[i+1,j,IE] + pstar*ustar + qstar*vstar
                 flux[IBx] = ustar * Uold[i+1,j,IBx] - ustar * Uold[i,j,IBx]
-                flux[IBy] = ustar * Uold[i+1,j,IBy] - vstar * Uold[i,j,IBy]
+                flux[IBy] = ustar * Uold[i+1,j,IBy] - vstar * Uold[i,j,IBx]
 
             for ivar in range(nvar):
                 Unew[i,j,ivar] -= (dt/dx)*flux[ivar]
@@ -348,7 +348,7 @@ def compute_kernel(Uold,Unew,dt):
                 flux[IU] = ustar*Uold[i,j+1,IU] + qstar
                 flux[IV] = ustar*Uold[i,j+1,IV] + pstar
                 flux[IE] = ustar*Uold[i,j+1,IE] + pstar*ustar + qstar*vstar
-                flux[IBx] = ustar * Uold[i,j+1,IBy] - vstar * Uold[i,j,IBy]
+                flux[IBx] = ustar * Uold[i,j+1,IBx] - vstar * Uold[i,j,IBy]
                 flux[IBy] = ustar * Uold[i,j+1,IBy] - ustar * Uold[i,j,IBy]
 
             for ivar in range(nvar):
@@ -357,8 +357,15 @@ def compute_kernel(Uold,Unew,dt):
 #time loop
 iout = 0
 time = 0.
-tend = 0.1
+tend = 0.2
 it = 0.
+
+figure(1)
+clf()
+imshow(Unew[:,:,IBx], origin='lower')
+colorbar()
+savefig('output_blast'+str(iout).zfill(3)+'.png')
+iout += 1
 
 while time < tend:
     it+=1
