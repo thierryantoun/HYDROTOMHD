@@ -4,11 +4,10 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 100
-ny = 100
+nx = 500
+ny = 3
 
-nt = 200
-cfl = 0.3
+cfl = 0.4
 freq_output = 10
 
 Lx = 1.
@@ -362,7 +361,7 @@ it = 0.
 
 figure(1)
 clf()
-imshow(Unew[:,:,IBx], origin='lower')
+imshow(Unew[:,:,IBy], origin='lower')
 colorbar()
 savefig('output_blast'+str(iout).zfill(3)+'.png')
 iout += 1
@@ -373,11 +372,11 @@ while time < tend:
     #output
     if (it%freq_output ==0):
         #vizualization result
-        figure(1)
-        clf()
-        imshow(Unew[:,:,IBx],origin='lower')
-        colorbar()
-        savefig('output_blast'+str(iout).zfill(3)+'.png')
+        # figure(1)
+        # clf()
+        # imshow(Unew[:,:,IBy],origin='lower')
+        # colorbar()
+        # savefig('output_briowu1'+str(iout).zfill(3)+'.png')
         iout +=1
 
     #compute time step
@@ -390,15 +389,48 @@ while time < tend:
     #copy Unew in Uold
     Uold = Unew.copy()
 
-    #boundary condition
-    #periodic in y
-    for j in range(ny+2):
-        Uold[0,j,:] = Uold[nx,j,:]
-        Uold[nx+1,j,:] = Uold[1,j,:]
+    # Bords gauche et droit, Dirichlet
+    Uold[0, :, ID] = 1.0      
+    Uold[nx+1, :, ID] = 0.125   
+    Uold[0, :, IU] = 0.0      
+    Uold[nx+1, :, IU] = 0.0  
+    Uold[0, :, IBx] = 0.65     
+    Uold[nx+1, :, IBx] = 0.65  
+    Uold[0, :, IBy] = 1.    
+    Uold[nx+1, :, IBy] = -1.
+    ekinl = 0
+    emagl = 0.5*(Uold[0,:,IBx]**2 + Uold[0,:,IBy]**2)
+    P = 1.
+    Uold[0,:,IE] = P/(gamma-1) + ekinl + emagl 
+    P = 0.1
+    Uold[nx+1,:,IE] = P/(gamma-1) + ekinl + emagl 
 
+
+    # Bords haut et bas, Dirichlet
     for i in range(nx+2):
-        Uold[i,0,:] = Uold[i,ny,:]
-        Uold[i,ny+1,:] = Uold[i,1,:]
+        x = xc[i]
+        if x < x_interface:  
+            P = 1.0
+            Uold[i,0,ID] = 1.0  
+            Uold[i,0,IU] = 0.0 
+            Uold[i,0,IV] = 0.0 
+            Uold[i,0,IBx] = 0.65
+            Uold[i,0,IBy] = 1.  
+            ekinl = 0
+            emagl = 0.5*(Uold[i,0,IBx]**2 + Uold[i,0,IBy]**2)
+            Uold[i,0,IE] = P/(gamma-1) + ekinl + emagl 
+            Uold[i,ny+1,:] =  Uold[i,0,:]
+        else:  
+            P = 0.1
+            Uold[i,0,ID] = 0.125  
+            Uold[i,0,IU] = 0.0  
+            Uold[i,0,IV] = 0.0  
+            Uold[i,0,IBx] = 0.65
+            Uold[i,0,IBy] = -1.
+            ekinr = 0
+            emagr = 0.5*(Uold[i,0,IBx]**2 + Uold[i,0,IBy]**2)
+            Uold[i,0,IE] = P/(gamma-1) + ekinr + emagr
+            Uold[i,ny+1,:] = Uold[i,0,:]
 
 #final output
 figure(1)
@@ -409,3 +441,27 @@ savefig('output_'+str(iout).zfill(3)+'.png')
 print("time: ",time," rho, E conservation: ",abs(int_rho-sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0))/int_rho, abs(int_E-sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0))/int_E)
 #compute error
 
+j_mid = ny // 2 
+rho_values = Unew[1:nx+1, j_mid, ID] 
+By_values = Unew[1:nx+1, j_mid, IBy] 
+x_values = xc[1:nx+1] 
+
+figure(2)
+plot(x_values, rho_values, label="Densité ρ (au milieu de la grille)")
+xlabel("x")
+ylabel("Densité ρ")
+title("Densité ρ en fonction de x à t = {:.2f}".format(time))
+grid(True)
+legend()
+savefig("rho_vs_x.png")
+show()
+
+figure(3)
+plot(x_values, By_values, label="Densité By (au milieu de la grille)")
+xlabel("x")
+ylabel("Densité By")
+title("Densité By en fonction de x à t = {:.2f}".format(time))
+grid(True)
+legend()
+savefig("By_x.png")
+show()
