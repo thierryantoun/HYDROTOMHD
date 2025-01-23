@@ -4,7 +4,7 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 500
+nx = 1000
 ny = 3
 
 cfl = 0.4
@@ -394,6 +394,8 @@ while time < tend:
     Uold[nx+1, :, ID] = 0.125   
     Uold[0, :, IU] = 0.0      
     Uold[nx+1, :, IU] = 0.0  
+    Uold[0, :, IV] = 0.0      
+    Uold[nx+1, :, IV] = 0.0
     Uold[0, :, IBx] = 0.65     
     Uold[nx+1, :, IBx] = 0.65  
     Uold[0, :, IBy] = 1.    
