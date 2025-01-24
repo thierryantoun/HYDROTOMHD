@@ -4,10 +4,10 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 1000
+nx = 2000
 ny = 3
 
-cfl = 0.4
+cfl = 0.45
 freq_output = 10
 
 Lx = 1.
@@ -15,6 +15,7 @@ Ly = 1.
 
 gamma = 2.
 cv = 1.5
+nt = 400
 
 #grid
 dx = Lx/nx
@@ -86,9 +87,12 @@ def compute_timestep(Uold):
             c02 = (gamma*pc/rhoc)
             ca2 = 2*emag / rhoc 
             cap2x = Uold[i,j,IBx]**2 / rhoc
-            cmf = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
+            cmfx = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
 
-            dt_loc = cfl*dx/max(abs(uc)+cmf,abs(vc)+cmf)
+            cap2y = Uold[i,j,IBy]**2 / rhoc
+            cmfy = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
+
+            dt_loc = cfl*dx/max(abs(uc)+cmfx,abs(vc)+cmfy)
             dt = min(dt,dt_loc)
     print("dt:",dt)
 
@@ -134,10 +138,10 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
             ar = rhor * cmfr
 
-            aface = 1.1*max(al,ar)
+            aface = 1.01*max(al,ar)
 
             ustar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
-            theta = 1.
+            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
             pstar = 0.5*(pl+pr)-0.5*(ur-ul)*aface*theta
 
             vstar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -199,7 +203,7 @@ def compute_kernel(Uold,Unew,dt):
             aface = 1.1*max(al,ar)
 
             ustar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
-            theta = 1.
+            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
             pstar = 0.5*(pl+pr)-0.5*(ur-ul)*aface*theta
 
             vstar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -258,11 +262,11 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             ar = rhor * cmfr
 
-            aface = 1.1*max(al,ar)
+            aface = 1.01*max(al,ar)
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
-            theta = 1.
+            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
             pstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface*theta
 
             #tangentielle
@@ -322,11 +326,11 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             ar = rhor * cmfr
 
-            aface = 1.1*max(al,ar)
+            aface = 1.01*max(al,ar)
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
-            theta = 1.
+            theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
             pstar = 0.5*(ql+qr)-0.5*(vr-vl)*aface*theta
 
             #tangentielle
@@ -365,26 +369,21 @@ imshow(Unew[:,:,IBy], origin='lower')
 colorbar()
 savefig('output_blast'+str(iout).zfill(3)+'.png')
 iout += 1
+t_values = [time]
+Bx_values = [0.65]
 
 while time < tend:
     it+=1
     print("timestep: ",it)
-    #output
-    if (it%freq_output ==0):
-        #vizualization result
-        # figure(1)
-        # clf()
-        # imshow(Unew[:,:,IBy],origin='lower')
-        # colorbar()
-        # savefig('output_briowu1'+str(iout).zfill(3)+'.png')
-        iout +=1
 
     #compute time step
     dt = compute_timestep(Uold)
     time +=dt
+    t_values.append(time)
 
     #advection equation
     compute_kernel(Uold,Unew,dt)
+    Bx_values.append(Unew[i,j,IBx])
 
     #copy Unew in Uold
     Uold = Unew.copy()
@@ -435,11 +434,7 @@ while time < tend:
             Uold[i,ny+1,:] = Uold[i,0,:]
 
 #final output
-figure(1)
 clf()
-imshow(Unew[:,:,ID],origin='lower')
-colorbar()
-savefig('output_'+str(iout).zfill(3)+'.png')
 print("time: ",time," rho, E conservation: ",abs(int_rho-sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0))/int_rho, abs(int_E-sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0))/int_E)
 #compute error
 
@@ -448,22 +443,32 @@ rho_values = Unew[1:nx+1, j_mid, ID]
 By_values = Unew[1:nx+1, j_mid, IBy] 
 x_values = xc[1:nx+1] 
 
-figure(2)
-plot(x_values, rho_values, label="Densité ρ (au milieu de la grille)")
-xlabel("x")
-ylabel("Densité ρ")
-title("Densité ρ en fonction de x à t = {:.2f}".format(time))
+figure(1)
+plot(t_values, Bx_values, label="Constance de Bx tout au long de la simu?")
+xlabel("t")
+ylabel("BX")
+title("Bx en fonction de t".format(time))
 grid(True)
 legend()
-savefig("rho_vs_x.png")
+savefig("Bx.png")
 show()
 
-figure(3)
+figure(2)
 plot(x_values, By_values, label="Densité By (au milieu de la grille)")
 xlabel("x")
 ylabel("Densité By")
 title("Densité By en fonction de x à t = {:.2f}".format(time))
 grid(True)
 legend()
-savefig("By_x.png")
+savefig("By.png")
+show()
+
+figure(3)
+plot(x_values, rho_values, label="Densité rho (au milieu de la grille)")
+xlabel("x")
+ylabel("Densité rho")
+title("Densité rho en fonction de x à t = {:.2f}".format(time))
+grid(True)
+legend()
+savefig("rho.png")
 show()
