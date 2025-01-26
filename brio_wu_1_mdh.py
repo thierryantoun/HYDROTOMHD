@@ -316,7 +316,7 @@ def compute_kernel(Uold,Unew,dt):
             ekinr = 0.5*(ur**2+vr**2)*rhor
             Bxr = Uold[i,j+1,IBx]
             Byr = Uold[i,j+1,IBy]
-            eBl = 0.5*(Bxr**2 + Byr**2)
+            eBr = 0.5*(Bxr**2 + Byr**2)
             pr = -Byr*Bxr
             pth = (Uold[i,j+1,IE]-ekinr)*(gamma-1.)
             qr = pth + eBr - Byr*Byr
