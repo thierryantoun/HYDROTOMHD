@@ -254,7 +254,7 @@ def compute_kernel(Uold,Unew,dt):
             Byr = Uold[i,j,IBy]
             eBr = 0.5*(Bxr**2 + Byr**2)
             pr = -Byr*Bxr
-            pth = (Uold[i,j,IE]-ekinr)*(gamma-1.)
+            pth = (Uold[i,j,IE]-ekinr-eBr)*(gamma-1.)
             qr = pth + eBr - Byr*Byr
             c02 = (gamma*pth/rhor)
             ca2 = 2*eBr / rhor
