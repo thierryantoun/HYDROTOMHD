@@ -4,10 +4,10 @@ from matplotlib.pyplot import *
 from numba import jit
 
 #parameters
-nx = 2000
+nx = 3000
 ny = 3
 
-cfl = 0.45
+cfl = 0.40
 freq_output = 10
 
 Lx = 1.
@@ -137,7 +137,7 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
             ar = rhor * cmfr
 
-            aface = 1.01*max(al,ar)
+            aface = 1.1*max(al,ar)
 
             ustar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
             theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
@@ -261,7 +261,7 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             ar = rhor * cmfr
 
-            aface = 1.01*max(al,ar)
+            aface = 1.1*max(al,ar)
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -325,7 +325,7 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             ar = rhor * cmfr
 
-            aface = 1.01*max(al,ar)
+            aface = 1.1*max(al,ar)
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -387,50 +387,9 @@ while time < tend:
     #copy Unew in Uold
     Uold = Unew.copy()
 
-    # Bords gauche et droit, Dirichlet
-    Uold[0, :, ID] = 1.0      
-    Uold[nx+1, :, ID] = 0.125   
-    Uold[0, :, IU] = 0.0      
-    Uold[nx+1, :, IU] = 0.0  
-    Uold[0, :, IV] = 0.0      
-    Uold[nx+1, :, IV] = 0.0
-    Uold[0, :, IBx] = 0.65     
-    Uold[nx+1, :, IBx] = 0.65  
-    Uold[0, :, IBy] = 1.    
-    Uold[nx+1, :, IBy] = -1.
-    ekinl = 0
-    emagl = 0.5*(Uold[0,:,IBx]**2 + Uold[0,:,IBy]**2)
-    P = 1.
-    Uold[0,:,IE] = P/(gamma-1) + ekinl + emagl 
-    P = 0.1
-    Uold[nx+1,:,IE] = P/(gamma-1) + ekinl + emagl 
-
-
-    # Bords haut et bas, Dirichlet
     for i in range(nx+2):
-        x = xc[i]
-        if x < x_interface:  
-            P = 1.0
-            Uold[i,0,ID] = 1.0  
-            Uold[i,0,IU] = 0.0 
-            Uold[i,0,IV] = 0.0 
-            Uold[i,0,IBx] = 0.65
-            Uold[i,0,IBy] = 1.  
-            ekinl = 0
-            emagl = 0.5*(Uold[i,0,IBx]**2 + Uold[i,0,IBy]**2)
-            Uold[i,0,IE] = P/(gamma-1) + ekinl + emagl 
-            Uold[i,ny+1,:] =  Uold[i,0,:]
-        else:  
-            P = 0.1
-            Uold[i,0,ID] = 0.125  
-            Uold[i,0,IU] = 0.0  
-            Uold[i,0,IV] = 0.0  
-            Uold[i,0,IBx] = 0.65
-            Uold[i,0,IBy] = -1.
-            ekinr = 0
-            emagr = 0.5*(Uold[i,0,IBx]**2 + Uold[i,0,IBy]**2)
-            Uold[i,0,IE] = P/(gamma-1) + ekinr + emagr
-            Uold[i,ny+1,:] = Uold[i,0,:]
+        Uold[i,0,:] = Uold[i,1,:]
+        Uold[i,ny+1,:] = Uold[i,ny,:]
 
 #final output
 clf()
