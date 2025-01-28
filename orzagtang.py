@@ -39,24 +39,22 @@ IE = 3
 IBx = 4
 IBy = 5
 
-x_interface = 0.5  
-
 for i in range(nx+2):
     for j in range(ny+2):
-        x = xc[i]
-        P = 1.0
-        Uold[i,j,ID] = 25./36*np.pi
-        rhoc = Uold[i,j,ID]
-        Uold[i,j,IU] = -np.sin(2*np.pi*yc[j]) 
-        uc = Uold[i,j,IU]/rhoc
-        Uold[i,j,IV] = np.sin(2*np.pi*xc[i])
-        vc = Uold[i,j,IV]/rhoc 
-        Uold[i,j,IBx] = - 1./sqrt(4*np.pi) * np.sin(2*np.pi*yc[j])
-        Uold[i,j,IBy] = 1./sqrt(4*np.pi) * np.sin(2*np.pi*xc[i])
-        ekinl = 0.5 * (uc**2 + vc**2)
-        emagl = 0.5*(Uold[i,j,IBx]**2 + Uold[i,j,IBy]**2)
-        Uold[i,j,IE] = P/(gamma-1) + ekinl + emagl
-        Unew[i,j,:] = Uold[i,j,:]
+
+        Uold[i,j,ID] = 25./(36.*pi)
+        Uold[i,j,IU] = -25./(36.*pi)*sin(2*pi*yc[j])
+        Uold[i,j,IV] = 25./(36.*pi)*sin(2*pi*xc[i])
+        Uold[i,j,IBx] = -sin(2*pi*yc[j])/sqrt(4*pi)
+        Uold[i,j,IBy] =  sin(4*pi*xc[i])/sqrt(4*pi)
+        Uold[i,j,IE] = 5/(12*pi)/(gamma-1.) + 0.5*(Uold[i,j,IBx]**2+Uold[i,j,IBy]**2) + 0.5*(Uold[i,j,IU]**2+Uold[i,j,IV]**2)/Uold[i,j,ID]
+
+        Unew[i,j,ID] = 25./(36.*pi)
+        Unew[i,j,IU] = -25./(36.*pi)*sin(2*pi*yc[j])
+        Unew[i,j,IV] = 25./(36.*pi)*sin(2*pi*xc[i])
+        Unew[i,j,IBx] = -sin(2*pi*yc[j])/sqrt(4*pi)
+        Unew[i,j,IBy] =  sin(4*pi*xc[i])/sqrt(4*pi)
+        Unew[i,j,IE] = 5/(12*pi)/(gamma-1.) + 0.5*(Unew[i,j,IBx]**2+Unew[i,j,IBy]**2) + 0.5*(Unew[i,j,IU]**2+Unew[i,j,IV]**2)/Unew[i,j,ID]
 
 int_rho = sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0)
 int_E   = sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0)
@@ -85,7 +83,6 @@ def compute_timestep(Uold):
 
             dt_loc = cfl*dx/max(abs(uc)+cmfx,abs(vc)+cmfy)
             dt = min(dt,dt_loc)
-    print("dt:",dt)
 
     return dt
 
@@ -112,7 +109,6 @@ def compute_kernel(Uold,Unew,dt):
             cap2x = Uold[i-1,j,IBx]**2 / rhol
             cmfl = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
             al = rhol * cmfl
-            cbl = sqrt(rhol**2*gamma*pth/rhol+rhol*(Byl**2+abs(Bxl*Byl)))
 
             rhor = Uold[i,j,ID]
             ur = Uold[i,j,IU]/rhor
@@ -129,9 +125,8 @@ def compute_kernel(Uold,Unew,dt):
             cap2x = Uold[i,j,IBx]**2 / rhor
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
             ar = rhor * cmfr
-            cbr = sqrt(rhor**2*gamma*pr/rhor+rhor*(Byr**2+abs(Bxr*Byr)))
 
-            aface = 1.01*max(al,ar)
+            aface = 1.1*max(al,ar)
 
             ustar = 0.5*(ul+ur)-0.5*(pr-pl)/aface
             theta = min(abs(ustar)/max(al/rhol,ar/rhor),1)
@@ -176,7 +171,6 @@ def compute_kernel(Uold,Unew,dt):
             cap2x = Uold[i,j,IBx]**2 / rhol
             cmfl = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
             al = rhol * cmfl
-            cbl = sqrt(rhol**2*gamma*pth/rhol+rhol*(Byl**2+abs(Bxl*Byl)))
 
             rhor = Uold[i+1,j,ID]
             ur = Uold[i+1,j,IU]/rhor
@@ -193,7 +187,6 @@ def compute_kernel(Uold,Unew,dt):
             cap2x = Uold[i+1,j,IBx]**2 / rhor
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2x))
             ar = rhor * cmfr
-            cbr = sqrt(rhor**2*gamma*pr/rhor+rhor*(Byr**2+abs(Bxr*Byr)))
 
             aface = 1.1*max(al,ar)
 
@@ -240,7 +233,6 @@ def compute_kernel(Uold,Unew,dt):
             cap2y = Uold[i,j-1,IBy]**2 / rhol
             cmfl = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             al = rhol * cmfl
-            cbl = sqrt(rhol**2*gamma*pth/rhol+rhol*(Byl**2+abs(Bxl*Byl)))
 
             rhor = Uold[i,j,ID]
             ur = Uold[i,j,IU]/rhor
@@ -250,16 +242,15 @@ def compute_kernel(Uold,Unew,dt):
             Byr = Uold[i,j,IBy]
             eBr = 0.5*(Bxr**2 + Byr**2)
             pr = -Byr*Bxr
-            pth = (Uold[i,j,IE]-ekinr)*(gamma-1.)
+            pth = (Uold[i,j,IE]-ekinr-eBr)*(gamma-1.)
             qr = pth + eBr - Byr*Byr
             c02 = (gamma*pth/rhor)
             ca2 = 2*eBr / rhor
             cap2y = Uold[i,j,IBy]**2 / rhor
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             ar = rhor * cmfr
-            cbr = sqrt(rhor**2*gamma*pr/rhor+rhor*(Byr**2+abs(Bxr*Byr)))
 
-            aface = 1.01*max(cbl,cbr)
+            aface = 1.1*max(al,ar)
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -313,9 +304,9 @@ def compute_kernel(Uold,Unew,dt):
             ekinr = 0.5*(ur**2+vr**2)*rhor
             Bxr = Uold[i,j+1,IBx]
             Byr = Uold[i,j+1,IBy]
-            eBl = 0.5*(Bxr**2 + Byr**2)
+            eBr = 0.5*(Bxr**2 + Byr**2)
             pr = -Byr*Bxr
-            pth = (Uold[i,j+1,IE]-ekinr)*(gamma-1.)
+            pth = (Uold[i,j+1,IE]-ekinr-eBr)*(gamma-1.)
             qr = pth + eBr - Byr*Byr
             c02 = (gamma*pth/rhor)
             ca2 = 2*eBr / rhor
@@ -323,7 +314,7 @@ def compute_kernel(Uold,Unew,dt):
             cmfr = sqrt(0.5*(c02+ca2)+0.5*sqrt((c02+ca2)*(c02+ca2)-4.*c02*cap2y))
             ar = rhor * cmfr
 
-            aface = 1.01*max(al,ar)
+            aface = 1.1*max(al,ar)
 
             #normale
             ustar = 0.5*(vl+vr)-0.5*(qr-ql)/aface
@@ -358,100 +349,45 @@ def compute_kernel(Uold,Unew,dt):
 iout = 0
 time = 0.
 tend = 0.5
-it = 0.
-
-figure(1)
-clf()
-imshow(Unew[:,:,IBy], origin='lower')
-colorbar()
-savefig('output_blast'+str(iout).zfill(3)+'.png')
-iout += 1
-t_values = [time]
-Bx_values = [0.65]
-
-while time < tend :
+it = 0
+while time < tend:
     print("timestep: ",it)
+    it += 1
     #output
     if (it%freq_output ==0):
         #vizualization result
-        x_min, x_max = -0.5, 0.5
-        y_min, y_max = -0.5, 0.5
-
-        x = np.linspace(-Lx/2, Lx/2, Unew.shape[0])
-        y = np.linspace(-Ly/2, Ly/2, Unew.shape[1])
-        x_indices = (x >= x_min) & (x <= x_max)
-        y_indices = (y >= y_min) & (y <= y_max)
-
-        U_zoom = Unew[np.ix_(x_indices, y_indices, [ID])].squeeze()
-
         figure(1)
         clf()
-        imshow(U_zoom, extent=[x_min, x_max, y_min, y_max], origin='lower', aspect='auto', cmap='inferno')
+        imshow(Unew[:,:,ID],origin='lower')
         colorbar()
-        colorbar(label='Density')  # Ajustez le label en fonction de votre visualisation
-        xlabel("x")
-        ylabel("y")
-        title(f"Orszag-Tang vortex, t = {time:.2f}")
         savefig('output_orzagtang'+str(iout).zfill(3)+'.png')
         iout +=1
 
     #compute time step
     dt = compute_timestep(Uold)
     time +=dt
-    t_values.append(time)
 
     #advection equation
     compute_kernel(Uold,Unew,dt)
-    Bx_values.append(Unew[i,j,IBx])
 
     #copy Unew in Uold
     Uold = Unew.copy()
 
-#boundary condition
-for j in range(ny+2):
-    Uold[0,j,:] = Uold[nx,j,:]
-    Uold[nx+1,j,:] = Uold[1,j,:]
+    #boundary condition
+    #periodic in y
+    for j in range(ny+2):
+        Uold[0,j,:] = Uold[nx,j,:]
+        Uold[nx+1,j,:] = Uold[1,j,:]
 
-for i in range(nx+2):
-    Uold[i,0,:] = Uold[i,ny,:]
-    Uold[i,ny+1,:] = Uold[i,1,:]
+    for i in range(nx+2):
+        Uold[i,0,:] = Uold[i,ny,:]
+        Uold[i,ny+1,:] = Uold[i,1,:]
 
 #final output
+figure(1)
 clf()
+imshow(Unew[:,:,ID],origin='lower')
+colorbar()
+savefig('output_'+str(iout).zfill(3)+'.png')
 print("time: ",time," rho, E conservation: ",abs(int_rho-sum(sum(Uold[1:nx+1,1:ny+1,ID],0),0))/int_rho, abs(int_E-sum(sum(Uold[1:nx+1,1:ny+1,IE],0),0))/int_E)
 #compute error
-
-j_mid = ny // 2 
-rho_values = Unew[1:nx+1, j_mid, ID] 
-By_values = Unew[1:nx+1, j_mid, IBy] 
-x_values = xc[1:nx+1] 
-
-figure(1)
-plot(t_values, Bx_values, label="Constance de Bx tout au long de la simu?")
-xlabel("t")
-ylabel("BX")
-title("Bx en fonction de t".format(time))
-grid(True)
-legend()
-savefig("Bx.png")
-show()
-
-figure(2)
-plot(x_values, By_values, label="Densité By (au milieu de la grille)")
-xlabel("x")
-ylabel("Densité By")
-title("Densité By en fonction de x à t = {:.2f}".format(time))
-grid(True)
-legend()
-savefig("By.png")
-show()
-
-figure(3)
-plot(x_values, rho_values, label="Densité rho (au milieu de la grille)")
-xlabel("x")
-ylabel("Densité rho")
-title("Densité rho en fonction de x à t = {:.2f}".format(time))
-grid(True)
-legend()
-savefig("rho.png")
-show()
